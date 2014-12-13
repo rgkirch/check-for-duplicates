@@ -45,49 +45,67 @@ def which_dir():
 # input_variable_type <str>, length <int>
 def duplicate_check_input_dialogue(input_variable_type, length):
     if input_variable_type == "int":
-        ones_to_delete = [int(x) for x in raw_input("Enter the numbers of the ones that you want to delete separated by spaces.\n").strip().split()]
+        ones_to_delete = [int(x) for x in raw_input("Enter the numbers of the ones that you want to mork for deletion separated by spaces.\n").strip().split()]
 
         if not ones_to_delete:
-            print "You didn't enter anything."
+            print "You didn't enter anything. Skipping..."
             return []
 
         # remove the inputs that are out of range
-        inputs_out_of_range(ones_to_delete, length)
+        trim_inputs_out_of_range(ones_to_delete, length)
 
         # if it's empty because all were removed (because all were out of range)
-        if not ones_to_delete:
-            while:
-                try_again = raw_input("All of your inputs were invalid. Do you want to try again?\n (y/n) ")
-                if try_again == "y":
-                    ones_to_delete = [int(x) for x in raw_input("Enter the numbers of the ones that you want to delete separated by spaces.\n").strip().split()]
-                    inputs_out_of_range(ones_to_delete, length)
+        while not ones_to_delete:
+            try_again = raw_input("All of your inputs were invalid. Do you want to try again?\n (y/n) ")
+            if try_again == "y":
+                ones_to_delete = [int(x) for x in raw_input("Re-enter the numbers of the ones that you want to delete separated by spaces.\n").strip().split()]
+                inputs_out_of_range(ones_to_delete, length)
+            else:
+                print "Not going to try again. Skipping..."
+                return []
 
-            return []
-
+        ## assuming that all in ones_to_delete are valid, if the length is equal then that means they are all marked for deletion
         if len(ones_to_delete) == length:
             first_pass = True
             delete_all = False
             # to move on you are either sure that you want to delete all of them or you have no longer selected all of them for deletion
             while not delete_all and len(ones_to_delete) == length:
                 if not first_pass:
-                    ones_to_delete = raw_input("Re-enter the numbers of the ones that you want to delete separated by spaces.\n").strip().split()
+                    ones_to_delete = [int(x) for x in raw_input("Re-enter the numbers of the ones that you want to delete separated by spaces.\n").strip().split()]
                 first_pass = False
-                are_you_sure = raw_input("You have selected to delete all of the files. Are you sure you want to do this?\n (y/n) ")
-                if are_you_sure == "y":
-                    delete_all = True
+                inputs_out_of_range(ones_to_delete, length)
+                if len(ones_to_delete) == length:
+                    are_you_sure = raw_input("You have selected to delete all of the files. Are you sure you want to do this?\n (y/n) ")
+                    if are_you_sure == "y":
+                        delete_all = True
     ## end if variable_type == "int"
     return ones_to_delete
     # elif
 
 # removes the inputs that are out of range
-def inputs_out_of_range(ones_to_delete, length):
-    for x in range(len(ones_to_delete)):
-        if ones_to_delete[x] > length:
+def trim_inputs_out_of_range(ones_to_delete, length):
+    ## I must work backwards because if I delete the thing at index 0 then what was as index 1 is now at index 0. This could then skip some values.
+    # print range(len(ones_to_delete)-1, -1, -1)
+    for x in range(len(ones_to_delete)-1, -1, -1):
+        if int(ones_to_delete[x]) > int(length)-1:
             ones_to_delete.pop(x)
-            print "Your inputs must not be greater than", length, "."
-        elif ones_to_delete[x] < 0:
+            print "Your inputs must be less than", length, "."
+            # print "Your inputs must not be greater than", length, "."
+        elif int(ones_to_delete[x]) < 0:
             ones_to_delete.pop(x)
-            print "Your input must not be less than 0."
+            print "Your inputs must be greater than 0."
+            # print "Your input must not be less than 0."
+
+# returns false if any of the inputs were invalid
+def check_inputs_out_of_range(ones_to_delete, length):
+    for x in ones_to_delete:
+        if int(x) > int(length)-1:
+            print "Your inputs must be less than", length, "."
+            return False
+        elif int(x) < 0:
+            print "Your inputs must be greater than 0."
+            return False
+    return True
 
 if __name__ == '__main__':
     startDir = which_dir()
