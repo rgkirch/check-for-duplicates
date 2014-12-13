@@ -38,15 +38,16 @@ def which_dir():
 
 def duplicate_check_input_dialogue(input_variable_type, length):
     if input_variable_type == "int":
-        ones_to_delete = raw_input("Enter the numbers of the ones that you want to delete separated by spaces.").strip().split()
+        ones_to_delete = raw_input("Enter the numbers of the ones that you want to delete separated by spaces.\n").strip().split()
 
         if not ones_to_delete:
             return []
 
         # problems
-        for x in range(len(ones_to_delete),0,-1):
-            print "length", length
-            print "ones", ones_to_delete[x]
+        for x in range(len(ones_to_delete)):
+            print "max", length
+            print "inputs", ones_to_delete[x]
+            # this line is giving me confusion****************************************
             if ones_to_delete[x] > length:
             # if ones_to_delete[x] > length:
                 # print ones_to_delete[x]
