@@ -1,3 +1,10 @@
+# Written by Richard Kirchofer.
+
+# How to hash a file.
+# http://www.pythoncentral.io/finding-duplicate-files-with-python/
+# A function to convert bytes into something more readable.
+# http://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
+
 import os
 import sys
 import hashlib
@@ -21,8 +28,16 @@ def hashfile(path, blocksize = 65536):
     infile.close()
     return hasher.hexdigest()
 
+# http://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
 # which directory should we look in?
-def which_dir():
+def choose_root_directory():
     print "default dir is current dir (./)"
     raw = raw_input("enter alternate dir: ")
     if raw:
@@ -41,63 +56,30 @@ def which_dir():
 
 # we want to make sure that the input is valid (not out of range)
 # also, if they choose to delete all then make sure they really intend to delete all
-# uses: inputs_out_of_range()
+# uses: check_inputs_in_range()
 # input_variable_type <str>, length <int>
-def duplicate_check_input_dialogue(input_variable_type, length):
-    if input_variable_type == "int":
-        ones_to_delete = [int(x) for x in raw_input("Enter the numbers of the ones that you want to mork for deletion separated by spaces.\n").strip().split()]
+def duplicate_check_input_dialogue(length):
+    while True:
+        ones_to_delete = [int(x) for x in raw_input("Enter the numbers of the ones that you want to mark for deletion separated by spaces.\n").strip().split()]
 
         if not ones_to_delete:
             print "You didn't enter anything. Skipping..."
             return []
 
-        # remove the inputs that are out of range
-        trim_inputs_out_of_range(ones_to_delete, length)
+        if not check_inputs_in_range(ones_to_delete, length):
+            print "Your input was invalid."
+            continue
 
-        # if it's empty because all were removed (because all were out of range)
-        while not ones_to_delete:
-            try_again = raw_input("All of your inputs were invalid. Do you want to try again?\n (y/n) ")
-            if try_again == "y":
-                ones_to_delete = [int(x) for x in raw_input("Re-enter the numbers of the ones that you want to delete separated by spaces.\n").strip().split()]
-                inputs_out_of_range(ones_to_delete, length)
-            else:
-                print "Not going to try again. Skipping..."
-                return []
-
-        ## assuming that all in ones_to_delete are valid, if the length is equal then that means they are all marked for deletion
         if len(ones_to_delete) == length:
-            first_pass = True
-            delete_all = False
-            # to move on you are either sure that you want to delete all of them or you have no longer selected all of them for deletion
-            while not delete_all and len(ones_to_delete) == length:
-                if not first_pass:
-                    ones_to_delete = [int(x) for x in raw_input("Re-enter the numbers of the ones that you want to delete separated by spaces.\n").strip().split()]
-                first_pass = False
-                inputs_out_of_range(ones_to_delete, length)
-                if len(ones_to_delete) == length:
-                    are_you_sure = raw_input("You have selected to delete all of the files. Are you sure you want to do this?\n (y/n) ")
-                    if are_you_sure == "y":
-                        delete_all = True
-    ## end if variable_type == "int"
-    return ones_to_delete
-    # elif
+            are_you_sure = raw_input("You have selected to delete all of the files. Are you sure you want to do this?\n (y/n) ")
+            # print type(are_you_sure)
+            if are_you_sure != "y":
+                continue
 
-# removes the inputs that are out of range
-def trim_inputs_out_of_range(ones_to_delete, length):
-    ## I must work backwards because if I delete the thing at index 0 then what was as index 1 is now at index 0. This could then skip some values.
-    # print range(len(ones_to_delete)-1, -1, -1)
-    for x in range(len(ones_to_delete)-1, -1, -1):
-        if int(ones_to_delete[x]) > int(length)-1:
-            ones_to_delete.pop(x)
-            print "Your inputs must be less than", length, "."
-            # print "Your inputs must not be greater than", length, "."
-        elif int(ones_to_delete[x]) < 0:
-            ones_to_delete.pop(x)
-            print "Your inputs must be greater than 0."
-            # print "Your input must not be less than 0."
+        return ones_to_delete
 
 # returns false if any of the inputs were invalid
-def check_inputs_out_of_range(ones_to_delete, length):
+def check_inputs_in_range(ones_to_delete, length):
     for x in ones_to_delete:
         if int(x) > int(length)-1:
             print "Your inputs must be less than", length, "."
@@ -107,43 +89,99 @@ def check_inputs_out_of_range(ones_to_delete, length):
             return False
     return True
 
+def print_list_of_dir_tups(list_of_dirs_tups):
+    if not list_of_dirs_tups:
+        return
+    max_level = len(list_of_dirs_tups[0])
+    for item in list_of_dirs_tups:
+        if len(item) < max_level:
+            max_level = len(item)
+
+        fname = os.path.join(item[0], item[1])
+        fname = fname.split('/')
+
+        # print index, fname, os.stat(fname).st_size
+
+
 if __name__ == '__main__':
-    startDir = which_dir()
+    root_directory = choose_root_directory()
     all_hashes_once = {}
     all_duplicates = {}
-    for dirName, dirList, fileList in os.walk(startDir):
-        print "checking", dirName
-        for filename in fileList:
-            # print filename
-            path = os.path.join(dirName, filename)
-            # file_hash = hashfile(dirName + "/" + filename)
+    duplicate_size = 0
+    duplicate_count = 0
+
+#########################################
+# walk through the dirs, hash the files #
+#########################################
+
+    # os.walk will return a tuple
+    # you may modify os.walk()[1] to change which dirs it decends into
+    for current_dir, dirs_in_current_dir, files_in_current_dir in os.walk(root_directory):
+        print "checking", current_dir
+        # exclude dirs that begin with a period
+        dirs_in_current_dir[:] = [x for x in dirs_in_current_dir if not x[0] == "."]
+
+        # hash the paths and add it to all_hashes_once if it's new or to all_duplicates if it's a duplicate
+        # the files are stored as tuples of the dir and file name
+        for file_name in files_in_current_dir:
+            path = os.path.join(current_dir, file_name)
             file_hash = hashfile(path)
+
             if file_hash in all_hashes_once:
-                print ">", filename
+                size = int(os.stat(path).st_size)
+                duplicate_size += size
+                duplicate_count += 1
+                print ">", sizeof_fmt(size), "\t", file_name
+                # add the thing to the right list
                 if file_hash in all_duplicates:
-                    all_duplicates[file_hash].append(path)
+                    all_duplicates[file_hash].append((current_dir, file_name))
                 else:
-                    all_duplicates[file_hash] = [all_hashes_once[file_hash], path]
+                    all_duplicates[file_hash] = [all_hashes_once[file_hash], (current_dir, file_name)]
             else:
-                all_hashes_once[file_hash] = path
+                all_hashes_once[file_hash] = (current_dir, file_name)
 
-    # print all_hashes_once
-    print "done checking"
+    print "Found", duplicate_count, "duplicate file(s). Duplicate space", sizeof_fmt(duplicate_size)
+
+##################################################################
+# print each set of duplicate files, choose which ones to delete #
+##################################################################
+
+    if not all_duplicates:
+        print "No duplicate files found."
+    else:
+        # for each duplicate file
+        for hash_value in all_duplicates:
+            files_to_delete = []
+            print "\nduplicate hash", hash_value
+            duplicate_file_list = all_duplicates[hash_value]
+
+            print_list_of_dir_tups(duplicate_file_list)
+            indicies_for_deletion = duplicate_check_input_dialogue(len(duplicate_file_list))
+
+            if not indicies_for_deletion:
+                continue
+
+            indicies_for_deletion.sort()
+            for index in range(len(duplicate_file_list)):
+                if indicies_for_deletion and index == indicies_for_deletion[0]:
+                    files_to_delete.append(duplicate_file_list[indicies_for_deletion.pop(0)])
+
+                print "\nThis will keep:"
+                for x in duplicate_file_list:
+                    if x not in files_to_delete:
+                        print x
+                print "\nThis will delete:"
+                for x in files_to_delete:
+                    print x
+                print "Is this correct?"
+                response = raw_input("[return] to accept (anything else to skip)")
+                if response:
+                    print "skip"
+                else:
+                    for x in files_to_delete:
+                        print "deleting", x
 
 
-    for hash_value in all_duplicates:
-        print "duplicate hash", hash_value
-        duplicate_file_list = all_duplicates[hash_value]
-        for index, duplicate_file in enumerate(duplicate_file_list):
-            print index, duplicate_file
-        ones_to_delete = duplicate_check_input_dialogue("int", len(duplicate_file_list))
-        if not ones_to_delete:
-            continue
-        ones_to_delete.sort()
-        for index in range(len(duplicate_file_list)):
-            if index == ones_to_delete[0]:
-                print "delete", duplicate_file_list[index]
-                ones_to_delete.pop(0)
 
 
 
