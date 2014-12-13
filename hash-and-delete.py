@@ -38,7 +38,7 @@ def which_dir():
 
 def duplicate_check_input_dialogue(input_variable_type, length):
     if input_variable_type == "int":
-        ones_to_delete = raw_input("Enter the numbers of the ones that you want to delete separated by spaces.\n").strip().split()
+        ones_to_delete = [int(x) for x in raw_input("Enter the numbers of the ones that you want to delete separated by spaces.\n").strip().split()]
 
         if not ones_to_delete:
             return []
