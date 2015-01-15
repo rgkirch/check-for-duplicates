@@ -19,7 +19,7 @@ import hashlib
 # returns the file hash as hex
 # path <str>, blocksize <int>
 def hashfile(path, blocksize = 65536):
-    "Hashfile - returns the md5sum a file by reading it in chunks of 65536 bits."
+    "Hashfile - returns the md5sum of a file by reading it in chunks of 65536 bytes."
     infile = open(path, 'rb')
     hasher = hashlib.md5()
     buf = infile.read(blocksize)
