@@ -19,6 +19,7 @@ import hashlib
 # returns the file hash as hex
 # path <str>, blocksize <int>
 def hashfile(path, blocksize = 65536):
+    "Hashfile - returns the md5sum a file by reading it in chunks of 65536 bits."
     infile = open(path, 'rb')
     hasher = hashlib.md5()
     buf = infile.read(blocksize)
@@ -31,6 +32,7 @@ def hashfile(path, blocksize = 65536):
 
 # http://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
 def sizeof_fmt(num, suffix='B'):
+    "Represent sizes in a human readable format. Using 1024 convention."
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
@@ -42,6 +44,7 @@ def sizeof_fmt(num, suffix='B'):
 
 # returns a string that is the dir to use
 def choose_root_directory():
+    "Prompts the user for what dir to use as starting dir."
     print "default dir is current dir (./)"
     raw = raw_input("enter alternate dir: ")
     if raw:
