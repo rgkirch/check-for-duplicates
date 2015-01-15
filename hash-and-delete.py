@@ -16,7 +16,6 @@ import hashlib
 # hashfile source
 # http://www.pythoncentral.io/finding-duplicate-files-with-python/
 
-# returns the file hash as hex
 # path <str>, blocksize <int>
 def hashfile(path, blocksize = 65536):
     "Hashfile - returns the md5sum of a file by reading it in chunks of 65536 bytes."
@@ -43,17 +42,29 @@ def sizeof_fmt(num, suffix='B'):
  #***********code above here can be considered golden
 
 # returns a string that is the dir to use
+# http://www.tutorialspoint.com/python/os_access.htm
+# F_OK to test the existence of a path
+# R_OK, W_OK, X_OK; read, write, execute
 def choose_root_directory():
     "Prompts the user for what dir to use as starting dir."
     print "default dir is current dir (./)"
-    raw = raw_input("enter alternate dir: ")
-    if raw:
-        if os.path.exists(str(raw)):
+    path = str(raw_input("enter alternate dir: "))
+    if path:
+        if os.access(path, os.F_OK):
             print "path exists"
-            return str(raw)
-        elif os.access(os.path.dirname(str(raw)), os.W_OK):
+            if not os.access(path, os.R_OK):
+                print "test for read privileges failed"
+            # if not os.access(path, os.W_OK):
+            #     print "test for write privileges failed"
+            #     print "write privaleges not needed"
+            # if not os.access(path, os.X_OK):
+            #     print "test for execute privileges failed"
+            #     print "execute privileges not needed"
+            return path
+            # os.access (returns true if access is allowed and false if it is not)
+        elif os.access(os.path.dirname(str(path )), os.W_OK):
             print "path does not exist but write privileges are given"
-            return str(raw)
+            return str(path)
         else:
             print "error, invalid path"
             print "must have write privileges"
