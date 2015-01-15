@@ -181,6 +181,8 @@ if __name__ == '__main__':
                     for x in files_to_delete:
                         print "deleting", x
 
+raw_input("done")
+
 
 
 
