@@ -28,6 +28,7 @@ def hashfile(path, blocksize = 65536):
     infile.close()
     return hasher.hexdigest()
 
+
 # http://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
@@ -36,7 +37,10 @@ def sizeof_fmt(num, suffix='B'):
         num /= 1024.0
     return "%.1f%s%s" % (num, 'Yi', suffix)
 
-# which directory should we look in?
+
+ #***********code above here can be considered golden
+
+# returns a string that is the dir to use
 def choose_root_directory():
     print "default dir is current dir (./)"
     raw = raw_input("enter alternate dir: ")
@@ -181,7 +185,7 @@ if __name__ == '__main__':
                     for x in files_to_delete:
                         print "deleting", x
 
-raw_input("done")
+prompt = raw_input("done")
 
 
 
